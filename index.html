@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supabase Images Debug Tool</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Supabase Images Debug Tool</h1>
+        </header>
+        
+        <div class="filters">
+            <div class="date-inputs">
+                <div class="input-group">
+                    <label for="start-date">Start Date:</label>
+                    <input type="datetime-local" id="start-date" name="start-date">
+                </div>
+                <div class="input-group">
+                    <label for="end-date">End Date:</label>
+                    <input type="datetime-local" id="end-date" name="end-date">
+                </div>
+            </div>
+            <div class="filter-buttons">
+                <button id="last-day-btn" class="btn btn-secondary">Last Day</button>
+                <button id="filter-btn" class="btn btn-primary">Filter Data</button>
+            </div>
+        </div>
+
+        <div class="loading" id="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>Loading data...</p>
+        </div>
+
+        <div class="error" id="error" style="display: none;">
+            <p id="error-message"></p>
+        </div>
+
+        <div class="results">
+            <div class="metadata-summary" id="metadata-summary" style="display: none;">
+                <h3>User Metadata Summary</h3>
+                
+                <div class="metadata-row">
+                    <div class="metadata-row-title">Totals (Sums)</div>
+                    <div class="metadata-grid">
+                        <div class="metadata-item">
+                            <span class="metadata-label">Total Transforms:</span>
+                            <span class="metadata-value" id="total-transforms">0</span>
+                        </div>
+                        <div class="metadata-item">
+                            <span class="metadata-label">Total Shares:</span>
+                            <span class="metadata-value" id="total-shares">0</span>
+                        </div>
+                        <div class="metadata-item">
+                            <span class="metadata-label">Total Likes:</span>
+                            <span class="metadata-value" id="total-likes">0</span>
+                        </div>
+                        <div class="metadata-item">
+                            <span class="metadata-label">Total Dislikes:</span>
+                            <span class="metadata-value" id="total-dislikes">0</span>
+                        </div>
+                        <div class="metadata-item">
+                            <span class="metadata-label">Total Buy Credits Calls:</span>
+                            <span class="metadata-value" id="total-buy-credits">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="metadata-row">
+                    <div class="metadata-row-title">Counts</div>
+                    <div class="metadata-grid">
+                        <div class="metadata-item">
+                            <span class="metadata-label">Total Users:</span>
+                            <span class="metadata-value" id="total-users">0</span>
+                        </div>
+                        <div class="metadata-item">
+                            <span class="metadata-label">Anonymous Users:</span>
+                            <span class="metadata-value" id="anonymous-users">0</span>
+                        </div>
+                        <div class="metadata-item">
+                            <span class="metadata-label">India Users:</span>
+                            <span class="metadata-value" id="india-users">0</span>
+                        </div>
+                        <div class="metadata-item">
+                            <span class="metadata-label">Avg Transforms per User:</span>
+                            <span class="metadata-value" id="avg-transforms">0</span>
+                        </div>
+                        <div class="metadata-item">
+                            <span class="metadata-label">Avg Shares per User:</span>
+                            <span class="metadata-value" id="avg-shares">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats" id="stats" style="display: none;">
+                <p>Found <span id="record-count">0</span> records</p>
+            </div>
+            
+            <div class="table-container">
+                <table id="results-table" style="display: none;">
+                    <thead>
+                        <tr>
+                            <th>User ID</th>
+                            <th>Created At</th>
+                            <th>Task/State</th>
+                            <th>Source Image</th>
+                            <th>Profile Image</th>
+                            <th>Target Style</th>
+                            <th>Result URL Image</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="config-panel" id="config-panel">
+        <h3>Supabase Configuration</h3>
+        <div class="input-group">
+            <label for="supabase-url">Supabase URL:</label>
+            <input type="text" id="supabase-url" placeholder="https://your-project.supabase.co">
+        </div>
+        <div class="input-group">
+            <label for="supabase-key">Supabase Anon Key:</label>
+            <input type="password" id="supabase-key" placeholder="Your anon key">
+        </div>
+        <button id="save-config" class="btn btn-primary">Save Configuration</button>
+        <button id="toggle-config" class="btn btn-secondary">Hide Config</button>
+    </div>
+
+    <button id="show-config" class="config-toggle" style="display: none;">⚙️ Config</button>
+
+    <script src="app.js"></script>
+</body>
+</html>
