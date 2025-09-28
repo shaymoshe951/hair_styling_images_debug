@@ -471,22 +471,38 @@ class SupabaseDebugTool {
                 userMetadata = await this.getUserMetadata(userId);
             }
 
-            // Add user group header row
-            if (userRecords.length > 1) {
-                const headerRow = document.createElement('tr');
-                headerRow.className = 'user-group-header';
-                headerRow.innerHTML = `
-                    <td colspan="7" class="user-group-title">
-                        <strong>👤 User: ${userId || 'N/A'} (${userRecords.length} records)</strong>
-                    </td>
-                `;
-                tableBody.appendChild(headerRow);
-            }
+            // Add user group header row with collapse toggle (always shown)
+            const headerRow = document.createElement('tr');
+            headerRow.className = 'user-group-header';
+            const recordText = userRecords.length === 1 ? 'record' : 'records';
+            headerRow.innerHTML = `
+                <td colspan="7" class="user-group-title">
+                    <button class="collapse-btn" aria-expanded="true">- 👤 User: ${userId || 'N/A'} (${userRecords.length} ${recordText})</button>
+                </td>
+            `;
+            tableBody.appendChild(headerRow);
+
+            // Wire up collapse toggle
+            const toggleBtn = headerRow.querySelector('.collapse-btn');
+            toggleBtn.addEventListener('click', () => {
+                const groupRows = tableBody.querySelectorAll(`tr[data-user-id='${userId || 'null'}']`);
+                const currentlyHidden = Array.from(groupRows).every(r => r.style.display === 'none');
+                if (currentlyHidden) {
+                    groupRows.forEach(r => { r.style.display = ''; });
+                    toggleBtn.setAttribute('aria-expanded', 'true');
+                    toggleBtn.textContent = `- 👤 User: ${userId || 'N/A'} (${userRecords.length} ${recordText})`;
+                } else {
+                    groupRows.forEach(r => { r.style.display = 'none'; });
+                    toggleBtn.setAttribute('aria-expanded', 'false');
+                    toggleBtn.textContent = `+ 👤 User: ${userId || 'N/A'} (${userRecords.length} ${recordText})`;
+                }
+            });
 
             // Add user metadata row
             if (userMetadata) {
                 const metadataRow = document.createElement('tr');
                 metadataRow.className = 'user-metadata-row';
+                metadataRow.setAttribute('data-user-id', userId || 'null');
                 metadataRow.innerHTML = `
                     <td colspan="7" class="user-metadata-cell">
                         <div class="user-metadata-grid">
@@ -581,6 +597,7 @@ class SupabaseDebugTool {
                     </td>
                 `;
 
+                row.setAttribute('data-user-id', userId || 'null');
                 tableBody.appendChild(row);
             }
         }
