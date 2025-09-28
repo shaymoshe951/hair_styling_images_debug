@@ -150,8 +150,8 @@ header h1 {
     border: 4px solid #f3f3f3;
     border-top: 4px solid #3498db;
     border-radius: 50%;
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
     animation: spin 1s linear infinite;
     margin: 0 auto 20px;
 }
@@ -194,7 +194,7 @@ header h1 {
 .metadata-summary h3 {
     margin-bottom: 15px;
     color: #2c3e50;
-    font-size: 1.2em;
+    font-size: 1.05em;
 }
 
 .metadata-row {
@@ -233,13 +233,13 @@ header h1 {
 .metadata-label {
     font-weight: 500;
     color: #555;
-    font-size: 14px;
+    font-size: 12px;
 }
 
 .metadata-value {
     font-weight: bold;
     color: #3498db;
-    font-size: 16px;
+    font-size: 14px;
 }
 
 .table-container {
@@ -469,9 +469,9 @@ tr:hover {
     border: none;
     color: white;
     font-weight: bold;
-    font-size: 14px;
+    font-size: 18px;
     cursor: pointer;
-    padding: 0;
+    padding: 6px 8px;
     text-align: left;
     transition: all 0.2s ease;
 }
