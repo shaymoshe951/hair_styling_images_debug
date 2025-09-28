@@ -108,20 +108,21 @@ class SupabaseDebugTool {
         localStorage.setItem('debug-tool-end-date', endDate);
     }
 
-    cacheFilterOptions(includeAnonymous, includeIndia) {
-        // With dropdowns, store selected values directly
-        localStorage.setItem('debug-tool-anonymous-filter', includeAnonymous);
-        localStorage.setItem('debug-tool-india-filter', includeIndia);
+    cacheFilterOptions(anonymousFilter, countryFilter) {
+        // Store selected values
+        localStorage.setItem('debug-tool-anonymous-filter', anonymousFilter);
+        localStorage.setItem('debug-tool-country-filter', countryFilter);
     }
 
     loadFilterOptions() {
         const anonymousFilter = localStorage.getItem('debug-tool-anonymous-filter');
-        const indiaFilter = localStorage.getItem('debug-tool-india-filter');
+        const countryFilter = localStorage.getItem('debug-tool-country-filter');
         if (anonymousFilter !== null) {
             document.getElementById('filter-anonymous').value = anonymousFilter;
         }
-        if (indiaFilter !== null) {
-            document.getElementById('filter-india').value = indiaFilter;
+        const countryInput = document.getElementById('filter-country');
+        if (countryInput && countryFilter !== null) {
+            countryInput.value = countryFilter;
         }
     }
 
@@ -187,7 +188,7 @@ class SupabaseDebugTool {
         const startDate = document.getElementById('start-date').value;
         const endDate = document.getElementById('end-date').value;
         const anonymousFilter = document.getElementById('filter-anonymous').value;
-        const indiaFilter = document.getElementById('filter-india').value;
+        const countryFilter = (document.getElementById('filter-country').value || '').trim();
 
         if (!startDate || !endDate) {
             this.showError('Please select both start and end dates');
@@ -201,7 +202,7 @@ class SupabaseDebugTool {
 
         // Cache the selected dates and filter options
         this.cacheDates(startDate, endDate);
-        this.cacheFilterOptions(anonymousFilter, indiaFilter);
+        this.cacheFilterOptions(anonymousFilter, countryFilter);
 
         this.showLoading(true);
         this.hideError();
@@ -209,12 +210,12 @@ class SupabaseDebugTool {
         try {
             // Fetch both metadata summary and processed images
             const [metadataSummary, processedImages] = await Promise.all([
-                this.fetchMetadataSummary(startDate, endDate, anonymousFilter, indiaFilter),
+                this.fetchMetadataSummary(startDate, endDate, anonymousFilter, countryFilter),
                 this.fetchProcessedImages(startDate, endDate)
             ]);
             
             await this.displayMetadataSummary(metadataSummary);
-            await this.displayResults(processedImages, anonymousFilter, indiaFilter);
+            await this.displayResults(processedImages, anonymousFilter, countryFilter);
         } catch (error) {
             this.showError('Error fetching data: ' + error.message);
             console.error('Error:', error);
@@ -241,7 +242,7 @@ class SupabaseDebugTool {
         return data || [];
     }
 
-    async fetchMetadataSummary(startDate, endDate, anonymousFilter = 'all', indiaFilter = 'all') {
+    async fetchMetadataSummary(startDate, endDate, anonymousFilter = 'all', countryFilter = '') {
         const startISO = new Date(startDate).toISOString();
         const endISO = new Date(endDate).toISOString();
 
@@ -299,11 +300,10 @@ class SupabaseDebugTool {
         } else if (anonymousFilter === 'registered-only') {
             filteredMetadata = filteredMetadata.filter(user => !user.is_anonymous);
         }
-        // Apply India filter
-        if (indiaFilter === 'india-only') {
-            filteredMetadata = filteredMetadata.filter(user => user.is_india);
-        } else if (indiaFilter === 'non-india-only') {
-            filteredMetadata = filteredMetadata.filter(user => !user.is_india);
+        // Apply country filter (free text, case-insensitive contains)
+        const cf = (countryFilter || '').trim().toLowerCase();
+        if (cf.length > 0) {
+            filteredMetadata = filteredMetadata.filter(user => (user.country || '').toLowerCase().includes(cf));
         }
 
         // Calculate summary statistics
@@ -319,7 +319,6 @@ class SupabaseDebugTool {
         const summary = {
             totalUsers: totalUsers,
             anonymousUsers: filteredMetadata.filter(user => user.is_anonymous).length,
-            indiaUsers: filteredMetadata.filter(user => user.is_india).length,
             totalTransforms: totalTransforms,
             totalShares: totalShares,
             totalLikes: totalLikes,
@@ -353,7 +352,7 @@ class SupabaseDebugTool {
         // Update counts & averages row values
         document.getElementById('total-users').textContent = summary.totalUsers;
         document.getElementById('anonymous-users').textContent = summary.anonymousUsers;
-        document.getElementById('india-users').textContent = summary.indiaUsers;
+        // Removed india-users display per new requirements
         document.getElementById('avg-transforms').textContent = summary.avgTransforms;
         document.getElementById('avg-shares').textContent = summary.avgShares;
         document.getElementById('avg-likes').textContent = summary.avgLikes;
@@ -402,7 +401,7 @@ class SupabaseDebugTool {
         return images;
     }
 
-    async displayResults(processedImages, anonymousFilter = 'all', indiaFilter = 'all') {
+    async displayResults(processedImages, anonymousFilter = 'all', countryFilter = '') {
         const tableBody = document.getElementById('table-body');
         const table = document.getElementById('results-table');
         const stats = document.getElementById('stats');
@@ -435,11 +434,11 @@ class SupabaseDebugTool {
                     } else if (anonymousFilter === 'registered-only' && userMetadata.is_anonymous) {
                         continue;
                     }
-                    // Apply India filter
-                    if (indiaFilter === 'india-only' && !userMetadata.is_india) {
-                        continue;
-                    } else if (indiaFilter === 'non-india-only' && userMetadata.is_india) {
-                        continue;
+                    // Apply country filter
+                    const cf = (countryFilter || '').trim().toLowerCase();
+                    if (cf.length > 0) {
+                        const uc = (userMetadata.country || '').toLowerCase();
+                        if (!uc.includes(cf)) continue;
                     }
                 }
             }
@@ -511,8 +510,8 @@ class SupabaseDebugTool {
                                 <div class="user-metadata-value">${userMetadata.is_anonymous ? 'Yes' : 'No'}</div>
                             </div>
                             <div class="user-metadata-item">
-                                <div class="user-metadata-label">India</div>
-                                <div class="user-metadata-value">${userMetadata.is_india ? 'Yes' : 'No'}</div>
+                                <div class="user-metadata-label">Country</div>
+                                <div class="user-metadata-value">${userMetadata.country || '—'}</div>
                             </div>
                             <div class="user-metadata-item">
                                 <div class="user-metadata-label">Transforms</div>

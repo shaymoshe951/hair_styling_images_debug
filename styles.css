@@ -85,7 +85,7 @@ header h1 {
     min-width: 200px;
 }
 
-.dropdown-group select {
+.dropdown-group select, .dropdown-group input[type="text"] {
     padding: 8px 12px;
     border: 1px solid #ddd;
     border-radius: 4px;
@@ -95,13 +95,13 @@ header h1 {
     transition: border-color 0.3s ease;
 }
 
-.dropdown-group select:focus {
+.dropdown-group select:focus, .dropdown-group input[type="text"]:focus {
     outline: none;
     border-color: #3498db;
     box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
 }
 
-.dropdown-group select:hover {
+.dropdown-group select:hover, .dropdown-group input[type="text"]:hover {
     border-color: #3498db;
 }
 
