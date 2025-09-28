@@ -249,8 +249,14 @@ class SupabaseDebugTool {
                 totalLikes: 0,
                 totalDislikes: 0,
                 totalBuyCreditsCalls: 0,
+                totalSourceUploads: 0,
+                totalAddCreditsCalls: 0,
                 avgTransforms: 0,
-                avgShares: 0
+                avgShares: 0,
+                avgLikes: 0,
+                avgDislikes: 0,
+                avgSourceUploads: 0,
+                avgAddCreditsCalls: 0
             };
         }
 
@@ -268,6 +274,11 @@ class SupabaseDebugTool {
         const totalUsers = metadata.length;
         const totalTransforms = metadata.reduce((sum, user) => sum + (user.total_transforms || 0), 0);
         const totalShares = metadata.reduce((sum, user) => sum + (user.total_shares || 0), 0);
+        const totalLikes = metadata.reduce((sum, user) => sum + (user.total_likes || 0), 0);
+        const totalDislikes = metadata.reduce((sum, user) => sum + (user.total_dislikes || 0), 0);
+        const totalBuyCreditsCalls = metadata.reduce((sum, user) => sum + (user.total_buy_credits_calls || 0), 0);
+        const totalSourceUploads = metadata.reduce((sum, user) => sum + (user.total_source_uploads || 0), 0);
+        const totalAddCreditsCalls = metadata.reduce((sum, user) => sum + (user.total_add_credits_calls || 0), 0);
         
         const summary = {
             totalUsers: totalUsers,
@@ -275,11 +286,17 @@ class SupabaseDebugTool {
             indiaUsers: metadata.filter(user => user.is_india).length,
             totalTransforms: totalTransforms,
             totalShares: totalShares,
-            totalLikes: metadata.reduce((sum, user) => sum + (user.total_likes || 0), 0),
-            totalDislikes: metadata.reduce((sum, user) => sum + (user.total_dislikes || 0), 0),
-            totalBuyCreditsCalls: metadata.reduce((sum, user) => sum + (user.total_buy_credits_calls || 0), 0),
+            totalLikes: totalLikes,
+            totalDislikes: totalDislikes,
+            totalBuyCreditsCalls: totalBuyCreditsCalls,
+            totalSourceUploads: totalSourceUploads,
+            totalAddCreditsCalls: totalAddCreditsCalls,
             avgTransforms: totalUsers > 0 ? Math.round((totalTransforms / totalUsers) * 100) / 100 : 0,
-            avgShares: totalUsers > 0 ? Math.round((totalShares / totalUsers) * 100) / 100 : 0
+            avgShares: totalUsers > 0 ? Math.round((totalShares / totalUsers) * 100) / 100 : 0,
+            avgLikes: totalUsers > 0 ? Math.round((totalLikes / totalUsers) * 100) / 100 : 0,
+            avgDislikes: totalUsers > 0 ? Math.round((totalDislikes / totalUsers) * 100) / 100 : 0,
+            avgSourceUploads: totalUsers > 0 ? Math.round((totalSourceUploads / totalUsers) * 100) / 100 : 0,
+            avgAddCreditsCalls: totalUsers > 0 ? Math.round((totalAddCreditsCalls / totalUsers) * 100) / 100 : 0
         };
 
         return summary;
@@ -294,13 +311,19 @@ class SupabaseDebugTool {
         document.getElementById('total-likes').textContent = summary.totalLikes;
         document.getElementById('total-dislikes').textContent = summary.totalDislikes;
         document.getElementById('total-buy-credits').textContent = summary.totalBuyCreditsCalls;
+        document.getElementById('total-source-uploads').textContent = summary.totalSourceUploads;
+        document.getElementById('total-add-credits').textContent = summary.totalAddCreditsCalls;
 
-        // Update counts row values
+        // Update counts & averages row values
         document.getElementById('total-users').textContent = summary.totalUsers;
         document.getElementById('anonymous-users').textContent = summary.anonymousUsers;
         document.getElementById('india-users').textContent = summary.indiaUsers;
         document.getElementById('avg-transforms').textContent = summary.avgTransforms;
         document.getElementById('avg-shares').textContent = summary.avgShares;
+        document.getElementById('avg-likes').textContent = summary.avgLikes;
+        document.getElementById('avg-dislikes').textContent = summary.avgDislikes;
+        document.getElementById('avg-source-uploads').textContent = summary.avgSourceUploads;
+        document.getElementById('avg-add-credits').textContent = summary.avgAddCreditsCalls;
 
         // Show the metadata summary
         metadataSummary.style.display = 'block';
