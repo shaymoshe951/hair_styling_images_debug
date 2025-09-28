@@ -71,6 +71,40 @@ header h1 {
     box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
 }
 
+.filter-options {
+    margin-bottom: 15px;
+}
+
+.dropdown-group {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.dropdown-group .input-group {
+    min-width: 200px;
+}
+
+.dropdown-group select {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    background-color: white;
+    cursor: pointer;
+    transition: border-color 0.3s ease;
+}
+
+.dropdown-group select:focus {
+    outline: none;
+    border-color: #3498db;
+    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+}
+
+.dropdown-group select:hover {
+    border-color: #3498db;
+}
+
 .filter-buttons {
     display: flex;
     gap: 10px;
@@ -450,6 +484,44 @@ tr:hover {
     color: #666;
     margin-top: 2px;
     font-weight: normal;
+}
+
+.user-metadata-row {
+    background-color: #f8f9fa !important;
+    border-left: 3px solid #95a5a6 !important;
+}
+
+.user-metadata-cell {
+    font-size: 11px;
+    color: #666;
+    padding: 8px 12px !important;
+}
+
+.user-metadata-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.user-metadata-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.user-metadata-label {
+    font-size: 9px;
+    color: #999;
+    margin-bottom: 2px;
+    font-weight: 500;
+}
+
+.user-metadata-value {
+    font-size: 11px;
+    color: #333;
+    font-weight: bold;
 }
 
 @media (max-width: 768px) {

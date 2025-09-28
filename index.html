@@ -24,6 +24,26 @@
                     <input type="datetime-local" id="end-date" name="end-date">
                 </div>
             </div>
+            <div class="filter-options">
+                <div class="dropdown-group">
+                    <div class="input-group">
+                        <label for="filter-anonymous">Anonymous Users:</label>
+                        <select id="filter-anonymous" name="filter-anonymous">
+                            <option value="all">All Users</option>
+                            <option value="anonymous-only">Anonymous Only</option>
+                            <option value="registered-only">Registered Only</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label for="filter-india">India Users:</label>
+                        <select id="filter-india" name="filter-india">
+                            <option value="all">All Users</option>
+                            <option value="india-only">India Only</option>
+                            <option value="non-india-only">Non-India Only</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
             <div class="filter-buttons">
                 <button id="last-day-btn" class="btn btn-secondary">Last Day</button>
                 <button id="filter-btn" class="btn btn-primary">Filter Data</button>

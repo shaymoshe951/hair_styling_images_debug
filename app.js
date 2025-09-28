@@ -8,6 +8,7 @@ class SupabaseDebugTool {
         this.setupEventListeners();
         this.loadConfig();
         this.setDefaultDates();
+        this.loadFilterOptions();
     }
 
     setupEventListeners() {
@@ -107,6 +108,23 @@ class SupabaseDebugTool {
         localStorage.setItem('debug-tool-end-date', endDate);
     }
 
+    cacheFilterOptions(includeAnonymous, includeIndia) {
+        // With dropdowns, store selected values directly
+        localStorage.setItem('debug-tool-anonymous-filter', includeAnonymous);
+        localStorage.setItem('debug-tool-india-filter', includeIndia);
+    }
+
+    loadFilterOptions() {
+        const anonymousFilter = localStorage.getItem('debug-tool-anonymous-filter');
+        const indiaFilter = localStorage.getItem('debug-tool-india-filter');
+        if (anonymousFilter !== null) {
+            document.getElementById('filter-anonymous').value = anonymousFilter;
+        }
+        if (indiaFilter !== null) {
+            document.getElementById('filter-india').value = indiaFilter;
+        }
+    }
+
     toggleConfigPanel(show) {
         const panel = document.getElementById('config-panel');
         const toggle = document.getElementById('show-config');
@@ -168,6 +186,8 @@ class SupabaseDebugTool {
 
         const startDate = document.getElementById('start-date').value;
         const endDate = document.getElementById('end-date').value;
+        const anonymousFilter = document.getElementById('filter-anonymous').value;
+        const indiaFilter = document.getElementById('filter-india').value;
 
         if (!startDate || !endDate) {
             this.showError('Please select both start and end dates');
@@ -179,8 +199,9 @@ class SupabaseDebugTool {
             return;
         }
 
-        // Cache the selected dates
+        // Cache the selected dates and filter options
         this.cacheDates(startDate, endDate);
+        this.cacheFilterOptions(anonymousFilter, indiaFilter);
 
         this.showLoading(true);
         this.hideError();
@@ -188,12 +209,12 @@ class SupabaseDebugTool {
         try {
             // Fetch both metadata summary and processed images
             const [metadataSummary, processedImages] = await Promise.all([
-                this.fetchMetadataSummary(startDate, endDate),
+                this.fetchMetadataSummary(startDate, endDate, anonymousFilter, indiaFilter),
                 this.fetchProcessedImages(startDate, endDate)
             ]);
             
             await this.displayMetadataSummary(metadataSummary);
-            await this.displayResults(processedImages);
+            await this.displayResults(processedImages, anonymousFilter, indiaFilter);
         } catch (error) {
             this.showError('Error fetching data: ' + error.message);
             console.error('Error:', error);
@@ -220,7 +241,7 @@ class SupabaseDebugTool {
         return data || [];
     }
 
-    async fetchMetadataSummary(startDate, endDate) {
+    async fetchMetadataSummary(startDate, endDate, anonymousFilter = 'all', indiaFilter = 'all') {
         const startISO = new Date(startDate).toISOString();
         const endISO = new Date(endDate).toISOString();
 
@@ -270,20 +291,35 @@ class SupabaseDebugTool {
             throw new Error(`Failed to fetch user metadata: ${metadataError.message}`);
         }
 
+        // Apply filters
+        let filteredMetadata = metadata;
+        // Apply anonymous filter
+        if (anonymousFilter === 'anonymous-only') {
+            filteredMetadata = filteredMetadata.filter(user => user.is_anonymous);
+        } else if (anonymousFilter === 'registered-only') {
+            filteredMetadata = filteredMetadata.filter(user => !user.is_anonymous);
+        }
+        // Apply India filter
+        if (indiaFilter === 'india-only') {
+            filteredMetadata = filteredMetadata.filter(user => user.is_india);
+        } else if (indiaFilter === 'non-india-only') {
+            filteredMetadata = filteredMetadata.filter(user => !user.is_india);
+        }
+
         // Calculate summary statistics
-        const totalUsers = metadata.length;
-        const totalTransforms = metadata.reduce((sum, user) => sum + (user.total_transforms || 0), 0);
-        const totalShares = metadata.reduce((sum, user) => sum + (user.total_shares || 0), 0);
-        const totalLikes = metadata.reduce((sum, user) => sum + (user.total_likes || 0), 0);
-        const totalDislikes = metadata.reduce((sum, user) => sum + (user.total_dislikes || 0), 0);
-        const totalBuyCreditsCalls = metadata.reduce((sum, user) => sum + (user.total_buy_credits_calls || 0), 0);
-        const totalSourceUploads = metadata.reduce((sum, user) => sum + (user.total_source_uploads || 0), 0);
-        const totalAddCreditsCalls = metadata.reduce((sum, user) => sum + (user.total_add_credits_calls || 0), 0);
+        const totalUsers = filteredMetadata.length;
+        const totalTransforms = filteredMetadata.reduce((sum, user) => sum + (user.total_transforms || 0), 0);
+        const totalShares = filteredMetadata.reduce((sum, user) => sum + (user.total_shares || 0), 0);
+        const totalLikes = filteredMetadata.reduce((sum, user) => sum + (user.total_likes || 0), 0);
+        const totalDislikes = filteredMetadata.reduce((sum, user) => sum + (user.total_dislikes || 0), 0);
+        const totalBuyCreditsCalls = filteredMetadata.reduce((sum, user) => sum + (user.total_buy_credits_calls || 0), 0);
+        const totalSourceUploads = filteredMetadata.reduce((sum, user) => sum + (user.total_source_uploads || 0), 0);
+        const totalAddCreditsCalls = filteredMetadata.reduce((sum, user) => sum + (user.total_add_credits_calls || 0), 0);
         
         const summary = {
             totalUsers: totalUsers,
-            anonymousUsers: metadata.filter(user => user.is_anonymous).length,
-            indiaUsers: metadata.filter(user => user.is_india).length,
+            anonymousUsers: filteredMetadata.filter(user => user.is_anonymous).length,
+            indiaUsers: filteredMetadata.filter(user => user.is_india).length,
             totalTransforms: totalTransforms,
             totalShares: totalShares,
             totalLikes: totalLikes,
@@ -366,7 +402,7 @@ class SupabaseDebugTool {
         return images;
     }
 
-    async displayResults(processedImages) {
+    async displayResults(processedImages, anonymousFilter = 'all', indiaFilter = 'all') {
         const tableBody = document.getElementById('table-body');
         const table = document.getElementById('results-table');
         const stats = document.getElementById('stats');
@@ -385,15 +421,38 @@ class SupabaseDebugTool {
 
         // Group records by user_id but keep all individual records
         const userGroups = this.groupByUserId(processedImages);
-        const uniqueUsers = Object.keys(userGroups);
+        let uniqueUsers = Object.keys(userGroups);
+
+        // Filter users based on metadata
+        const filteredUserIds = [];
+        for (const userId of uniqueUsers) {
+            if (userId && userId !== 'null') {
+                const userMetadata = await this.getUserMetadata(userId);
+                if (userMetadata) {
+                    // Apply anonymous filter
+                    if (anonymousFilter === 'anonymous-only' && !userMetadata.is_anonymous) {
+                        continue;
+                    } else if (anonymousFilter === 'registered-only' && userMetadata.is_anonymous) {
+                        continue;
+                    }
+                    // Apply India filter
+                    if (indiaFilter === 'india-only' && !userMetadata.is_india) {
+                        continue;
+                    } else if (indiaFilter === 'non-india-only' && userMetadata.is_india) {
+                        continue;
+                    }
+                }
+            }
+            filteredUserIds.push(userId);
+        }
 
         // Show stats
-        recordCount.textContent = `${processedImages.length} records from ${uniqueUsers.length} unique users`;
+        recordCount.textContent = `${processedImages.length} records from ${filteredUserIds.length} unique users`;
         stats.style.display = 'block';
 
         // Process each user group
-        for (let userIndex = 0; userIndex < uniqueUsers.length; userIndex++) {
-            const userId = uniqueUsers[userIndex];
+        for (let userIndex = 0; userIndex < filteredUserIds.length; userIndex++) {
+            const userId = filteredUserIds[userIndex];
             const userRecords = userGroups[userId].records;
             
             // Get storage images for this user (once per user)
@@ -406,6 +465,12 @@ class SupabaseDebugTool {
                 }
             }
 
+            // Get user metadata for display
+            let userMetadata = null;
+            if (userId && userId !== 'null') {
+                userMetadata = await this.getUserMetadata(userId);
+            }
+
             // Add user group header row
             if (userRecords.length > 1) {
                 const headerRow = document.createElement('tr');
@@ -416,6 +481,55 @@ class SupabaseDebugTool {
                     </td>
                 `;
                 tableBody.appendChild(headerRow);
+            }
+
+            // Add user metadata row
+            if (userMetadata) {
+                const metadataRow = document.createElement('tr');
+                metadataRow.className = 'user-metadata-row';
+                metadataRow.innerHTML = `
+                    <td colspan="7" class="user-metadata-cell">
+                        <div class="user-metadata-grid">
+                            <div class="user-metadata-item">
+                                <div class="user-metadata-label">Anonymous</div>
+                                <div class="user-metadata-value">${userMetadata.is_anonymous ? 'Yes' : 'No'}</div>
+                            </div>
+                            <div class="user-metadata-item">
+                                <div class="user-metadata-label">India</div>
+                                <div class="user-metadata-value">${userMetadata.is_india ? 'Yes' : 'No'}</div>
+                            </div>
+                            <div class="user-metadata-item">
+                                <div class="user-metadata-label">Transforms</div>
+                                <div class="user-metadata-value">${userMetadata.total_transforms || 0}</div>
+                            </div>
+                            <div class="user-metadata-item">
+                                <div class="user-metadata-label">Shares</div>
+                                <div class="user-metadata-value">${userMetadata.total_shares || 0}</div>
+                            </div>
+                            <div class="user-metadata-item">
+                                <div class="user-metadata-label">Likes</div>
+                                <div class="user-metadata-value">${userMetadata.total_likes || 0}</div>
+                            </div>
+                            <div class="user-metadata-item">
+                                <div class="user-metadata-label">Dislikes</div>
+                                <div class="user-metadata-value">${userMetadata.total_dislikes || 0}</div>
+                            </div>
+                            <div class="user-metadata-item">
+                                <div class="user-metadata-label">Source Uploads</div>
+                                <div class="user-metadata-value">${userMetadata.total_source_uploads || 0}</div>
+                            </div>
+                            <div class="user-metadata-item">
+                                <div class="user-metadata-label">Buy Credits</div>
+                                <div class="user-metadata-value">${userMetadata.total_buy_credits_calls || 0}</div>
+                            </div>
+                            <div class="user-metadata-item">
+                                <div class="user-metadata-label">Add Credits</div>
+                                <div class="user-metadata-value">${userMetadata.total_add_credits_calls || 0}</div>
+                            </div>
+                        </div>
+                    </td>
+                `;
+                tableBody.appendChild(metadataRow);
             }
 
             // Process each individual record for this user
@@ -497,6 +611,26 @@ class SupabaseDebugTool {
         });
 
         return groups;
+    }
+
+    async getUserMetadata(userId) {
+        try {
+            const { data, error } = await this.supabase
+                .from('user_metadata')
+                .select('*')
+                .eq('user_id', userId)
+                .single();
+
+            if (error) {
+                console.warn(`Could not fetch metadata for user ${userId}:`, error);
+                return null;
+            }
+
+            return data;
+        } catch (error) {
+            console.warn(`Could not fetch metadata for user ${userId}:`, error);
+            return null;
+        }
     }
 
     createImageCell(imageUrl, altText) {
