@@ -315,6 +315,7 @@ class SupabaseDebugTool {
         const totalBuyCreditsCalls = filteredMetadata.reduce((sum, user) => sum + (user.total_buy_credits_calls || 0), 0);
         const totalSourceUploads = filteredMetadata.reduce((sum, user) => sum + (user.total_source_uploads || 0), 0);
         const totalAddCreditsCalls = filteredMetadata.reduce((sum, user) => sum + (user.total_add_credits_calls || 0), 0);
+        const totalAuthClicks = filteredMetadata.reduce((sum, user) => sum + (user.total_auth_clicks || 0), 0);
         
         const summary = {
             totalUsers: totalUsers,
@@ -326,12 +327,14 @@ class SupabaseDebugTool {
             totalBuyCreditsCalls: totalBuyCreditsCalls,
             totalSourceUploads: totalSourceUploads,
             totalAddCreditsCalls: totalAddCreditsCalls,
+            totalAuthClicks: totalAuthClicks,
             avgTransforms: totalUsers > 0 ? Math.round((totalTransforms / totalUsers) * 100) / 100 : 0,
             avgShares: totalUsers > 0 ? Math.round((totalShares / totalUsers) * 100) / 100 : 0,
             avgLikes: totalUsers > 0 ? Math.round((totalLikes / totalUsers) * 100) / 100 : 0,
             avgDislikes: totalUsers > 0 ? Math.round((totalDislikes / totalUsers) * 100) / 100 : 0,
             avgSourceUploads: totalUsers > 0 ? Math.round((totalSourceUploads / totalUsers) * 100) / 100 : 0,
-            avgAddCreditsCalls: totalUsers > 0 ? Math.round((totalAddCreditsCalls / totalUsers) * 100) / 100 : 0
+            avgAddCreditsCalls: totalUsers > 0 ? Math.round((totalAddCreditsCalls / totalUsers) * 100) / 100 : 0,
+            avgAuthClicks: totalUsers > 0 ? Math.round((totalAuthClicks / totalUsers) * 100) / 100 : 0
         };
 
         return summary;
@@ -348,17 +351,20 @@ class SupabaseDebugTool {
         document.getElementById('total-buy-credits').textContent = summary.totalBuyCreditsCalls;
         document.getElementById('total-source-uploads').textContent = summary.totalSourceUploads;
         document.getElementById('total-add-credits').textContent = summary.totalAddCreditsCalls;
+        const totalAuthEl = document.getElementById('total-auth-clicks');
+        if (totalAuthEl) totalAuthEl.textContent = summary.totalAuthClicks;
 
         // Update counts & averages row values
         document.getElementById('total-users').textContent = summary.totalUsers;
         document.getElementById('anonymous-users').textContent = summary.anonymousUsers;
-        // Removed india-users display per new requirements
         document.getElementById('avg-transforms').textContent = summary.avgTransforms;
         document.getElementById('avg-shares').textContent = summary.avgShares;
         document.getElementById('avg-likes').textContent = summary.avgLikes;
         document.getElementById('avg-dislikes').textContent = summary.avgDislikes;
         document.getElementById('avg-source-uploads').textContent = summary.avgSourceUploads;
         document.getElementById('avg-add-credits').textContent = summary.avgAddCreditsCalls;
+        const avgAuthEl = document.getElementById('avg-auth-clicks');
+        if (avgAuthEl) avgAuthEl.textContent = summary.avgAuthClicks;
 
         // Show the metadata summary
         metadataSummary.style.display = 'block';
@@ -540,6 +546,10 @@ class SupabaseDebugTool {
                             <div class="user-metadata-item">
                                 <div class="user-metadata-label">Add Credits</div>
                                 <div class="user-metadata-value">${userMetadata.total_add_credits_calls || 0}</div>
+                            </div>
+                            <div class="user-metadata-item">
+                                <div class="user-metadata-label">Auth Clicks</div>
+                                <div class="user-metadata-value">${userMetadata.total_auth_clicks || 0}</div>
                             </div>
                         </div>
                     </td>
